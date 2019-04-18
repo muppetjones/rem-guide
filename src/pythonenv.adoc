@@ -15,7 +15,7 @@ This document is a work in progress.
 
 This document will guide you through the steps of setting up a python development environment on OSX. Linux setup is similar. Windows is right out.
 
-== Abbreviations, Acronyms, and Definitions
+=== Abbreviations, Acronyms, and Definitions
 
 [width="80%",cols="2m,<3",options="header"]
 |================
@@ -30,9 +30,9 @@ This document will guide you through the steps of setting up a python developmen
 
 == Programs Used in this Guide
 
-=== Autoenv
+=== `autoenv`
 
-Autoenv allows you to define per-directory settings. As you change into a directory on the command line, autoenv will detect and execute commands from a `.env` file. Same thing for `.env.leave` when you ...leave a directory.
+`autoenv` allows you to define per-directory settings. As you change into a directory on the command line, `autoenv` will detect and execute commands from a `.env` file. Same thing for `.env.leave` when you ...leave a directory.
 
 I like `autoenv` for its simplicity. You change directories, and it does a thing. It executes your defined env file as BASH commands. Simple and effective.
 
@@ -54,7 +54,7 @@ Homebrew is a package management system for OSX. Feel free to use MacPorts, but 
 
 `pyenv` is a command line tool that handles installation and management of multiple versions of python. I won't cover the full extent of the features here, and I don't use most of them; however, `pyenv` is arguably the easiest and best way to install multiple versions of python in OSX. I use pyenv to install specific python versions. Then I remove it.
 
-Pyenv is a great piece of software, especially when used in conjunction with virtualenv. However, I think that it makes too many assumptions about your setup. Beyond installing different python versions, it has considerable overlap with direnv and friends.
+Pyenv is a great piece of software, especially when used in conjunction with virtualenv. However, I think that it makes too many assumptions about your setup. Beyond installing different python versions, it has considerable overlap with `direnv`and friends.
 
 *tl;dr:* Defnitely use it for specific python versions. After that, your call.
 
@@ -71,11 +71,11 @@ Conda is a package management software. It started out as a pip replacement; few
 
 *tl;dr:* Conda is fine for personal use, but I strongly recommend against using it in a development environment.
 
-=== Direnv
+=== `direnv`
 
-I know the author of autoenv has recommended people use direnv, and there are good reasons to do so: Direnv is a very useful piece of software. However, it's a bit too magic for my tastes. It makes too many assumptions about what you want to do and how you want to do it. Direnv has its own language for its envrc files, which increases the learning curve slightly.
+I know the author of `autoenv` has recommended people use direnv, and there are good reasons to do so: `direnv`is a very useful piece of software. However, it's a bit too magic for my tastes. It makes too many assumptions about what you want to do and how you want to do it. `direnv`has its own language for its envrc files, which increases the learning curve slightly.
 
-*tl;dr:* Direnv is great. Use it if you want. I won't cover it here.
+*tl;dr:* `direnv`is great. Use it if you want. I won't cover it here.
 
 === Virtualenv
 
@@ -136,14 +136,14 @@ After you've decided which versions you want to install, run the following from 
 
 1. Install `pyenv` via homebrew.
 +
-[source=shell]
+[source,shell]
 ----
 brew install pyenv
 ----
 +
 2. Install specific python versions via pyenv
 +
-[source=shell]
+[source,shell]
 ----
 pyenv install 2.7
 pyenv install 3.4.3
@@ -153,15 +153,19 @@ pyenv install 3.7
 +
 3. [optional] Uninstall `pyenv`. Again, this is a personal preference.
 +
-[source=shell]
+[source,shell]
 ----
 brew uninstall pyenv
 ----
 
 Afterwards, you should see something like the following:
 
+[source,shell]
 ----
-$ tree -L 2 ~/.pyenv
+tree -L 2 ~/.pyenv
+----
+
+----
 /<your home directory>/.pyenv
 ├── shims
 │   ├── 2to3 <1>
@@ -209,7 +213,7 @@ export TEMPUS_PYPI=https://nexus.securetempus.com/repository/pypi-internal/simpl
 <1> The `activate` function is about the only thing provided by `virtualenv` that we don't get from `venv`. This function allows you to activate venvs by name, e.g., `$ activate py36`.
 <2> Note the explicit path here. Feel free to change the location as you see fit, e.g., `$(pwd)/my_project_venv/bin/activate`.
 <2> Disallow usage of pip outside of a virtual environment. This will prevent you from accidentally using the system installs. Also, explicitly set the cache location.
-<3> Sometimes you really do need the system python. These two functions will allow you to use the system pip directly. Note the absolute paths.
+<3> Sometimes you really do need the system python. `syspip2` and `syspip3` will allow you to use the system pips directly. Note the absolute paths.
 
 ==== Git Status in Your Prompt
 
@@ -308,11 +312,15 @@ ptest tests/unit/mypackage/test_module1.py::TestThis::test_this_works <4>
 
 We may want to test out some code or play around with some ideas in jupyter lab; hoowever, we want to avoid polluting our system python, and we probably don't want to pollute our project-specific virtual envs either. For these cases, we can create sandbox venvs.
 
-As discussed above, I prefer to keep my virtual environments in one place, e.g., `${HOME}/venv`, in contrast to within each project. I recommend descriptive names for your venvs; and for my sandbox environments, I use generic names like `py3.7`.
 
 [source,shell]
 ----
-~/.pyenv/versions/3.7.1/bin/python3.7 -m venv "${HOME}/venv/py3.7"
-----
+# create the virtual environment
+~/.pyenv/versions/3.7.1/bin/python3.7 -m venv "${HOME}/venv/py3.7" <1>
 
-Using the alias we defined <<Virtual Environment,above>>, we can easily activate
+# activate the virtual environment
+activate py3.7 <2>
+----
+<1> As discussed above, I prefer to keep my virtual environments in one place, e.g., `${HOME}/venv`, in contrast to within each project. I recommend descriptive names for your venvs; and for my sandbox environments, I use generic names like `py3.7`.
+
+<2> See the alias we defined <<Virtual Environment,above>>.
