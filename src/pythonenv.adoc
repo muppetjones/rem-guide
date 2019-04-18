@@ -1,0 +1,318 @@
+= How to Setup a Python Development Environment
+ifdef::env-github,env-browser[:outfilesuffix: .adoc]
+Stephen J. Bush
+:toc: left
+:sectlinks:
+
+[NOTE]
+----
+This document is a work in progress.
+----
+
+
+:numbered!:
+== Abstract
+
+This document will guide you through the steps of setting up a python development environment on OSX. Linux setup is similar. Windows is right out.
+
+== Abbreviations, Acronyms, and Definitions
+
+[width="80%",cols="2m,<3",options="header"]
+|================
+| Name | Meaning
+
+| venv | virtual environment
+| envariable | environment variable
+| test runner | The software used to execute tests, e.g., `unittest`, `pytest`, or `nosetest`
+|================
+
+:numbered:
+
+== Programs Used in this Guide
+
+=== Autoenv
+
+Autoenv allows you to define per-directory settings. As you change into a directory on the command line, autoenv will detect and execute commands from a `.env` file. Same thing for `.env.leave` when you ...leave a directory.
+
+I like `autoenv` for its simplicity. You change directories, and it does a thing. It executes your defined env file as BASH commands. Simple and effective.
+
+=== Git
+
+Git is a version control system. There are others, but I won't cover the differences or why X is better. Bottom line: if you're not using one, start.
+
+We won't discuss git much. I'll assume you have it setup.
+
+=== Homebrew
+
+Homebrew is a package management system for OSX. Feel free to use MacPorts, but this guide assumes you have homebrew installed. This guide will not cover installation or usage of homebrew.
+
+=== Python3
+
+'Cuz python2 is old. Also, the steps discussed here refer to the use of `venv`, which ships with python as of 3.4.3.
+
+=== `pyenv`
+
+`pyenv` is a command line tool that handles installation and management of multiple versions of python. I won't cover the full extent of the features here, and I don't use most of them; however, `pyenv` is arguably the easiest and best way to install multiple versions of python in OSX. I use pyenv to install specific python versions. Then I remove it.
+
+Pyenv is a great piece of software, especially when used in conjunction with virtualenv. However, I think that it makes too many assumptions about your setup. Beyond installing different python versions, it has considerable overlap with direnv and friends.
+
+*tl;dr:* Defnitely use it for specific python versions. After that, your call.
+
+=== `venv`
+
+Since python 3.4.3, python has shipped with `venv` built-in. This nifty package handles the creation of python virtual environments. It provides most of the features of its predecessor, the handy `virtualenv` package, but is officially supported.
+
+
+== Why not `________`?
+
+=== Conda
+
+Conda is a package management software. It started out as a pip replacement; few packages were available, and setup was...painful. Over time, it has grown considerably and made package management much easier. However, Conda has always been a bit bloated and a bit magic. It makes many assumptions about how you want your environment, and it has even gone beyond python.
+
+*tl;dr:* Conda is fine for personal use, but I strongly recommend against using it in a development environment.
+
+=== Direnv
+
+I know the author of autoenv has recommended people use direnv, and there are good reasons to do so: Direnv is a very useful piece of software. However, it's a bit too magic for my tastes. It makes too many assumptions about what you want to do and how you want to do it. Direnv has its own language for its envrc files, which increases the learning curve slightly.
+
+*tl;dr:* Direnv is great. Use it if you want. I won't cover it here.
+
+=== Virtualenv
+
+We don't need it. Python3 has shipped with venv since 3.4.
+
+== Things to Consider
+
+=== Location of Virtual Environments
+
+Personally, I prefer to keep my virtual environments separate from my code. Specifically, I use `${HOME}/venv`.
+
+* I know where to find them without having to track projects. I can easily see which venvs I have setup.
+* Arbitrary venvs may not have a pacakge that they belong to. If you have this use case, might as well keep everything together.
+* There's no worry about accidentally committing venvs or adding them to a docker image (though you should make sure your `.gitignore` and `.dockerignore` files prevent it).
+* I don't have to worry about using a generic name, e.g., "venv". Maybe you only need one venv to start with, but what happens as your project grows? You may (will?) need to setup multiple venvs for different versions of python.
+
+
+=== System vs. Sandbox
+
+OSX comes with python2, and this guide covers installation of python3 via homebrew. These are your "system" or "global" python installations. They are nice to have setup, but I strongly recommend that you avoid installing packages on these system versions; granted, there are exceptions. This topic has been covered elsewhere, so I won't waste my breath (fingers?) here.
+
+I also recommend "sandbox" venvs. Essentially, these are project agnostic venvs for playing around with various versions of python. I tend to treat these as my "system" versions and install whatever packages I use often, e.g., `black` and `numpy`. I also use these sandboxes as my installs for jupyter lab and the main python kernels.
+
+== Setting up the system
+
+=== Dependencies
+
+I'm going to assume you already have these set up:
+
+* Homebrew
+* XCode
+
+=== Installing python3 (ooptional)
+
+OSX comes with python 2.7 (and possibly python 3.X). While it's not strictly necessary, it can be nice to have a global version of python3 installed and easily upgradeable. Homebrew can do that, but with a couple of caveats:
+
+* Homebrew may update its installed version of python. Technically, the user has to do it, but homebrew is not as verbose in warning you about it.
+* Homebrew assumes you really mean python3 when you say python. Literally. It symlinks it.
+
+```shell
+brew install python3
+```
+
+=== Installing multiple python versions with pyenv
+
+[NOTE]
+=====
+Subsequent steps assume that pyenv installed everything to its default location at `${HOME}/.pyenv`.
+=====
+
+We'll use the pyenv versions as the base python for most of our virtual environments. I recommend installing specific versions even if you already have them through OSX or homebrew. The reasons are simple:
+
+* We're being explicit about which versions we want for development.
+* We're isolating our dev environment from the system.
+* The OSX and homebrew versions may be updated and have slight differences from a vanilla install.
+
+After you've decided which versions you want to install, run the following from the command line:
+
+1. Install `pyenv` via homebrew.
++
+[source=shell]
+----
+brew install pyenv
+----
++
+2. Install specific python versions via pyenv
++
+[source=shell]
+----
+pyenv install 2.7
+pyenv install 3.4.3
+pyenv install 3.5.4
+pyenv install 3.7
+----
++
+3. [optional] Uninstall `pyenv`. Again, this is a personal preference.
++
+[source=shell]
+----
+brew uninstall pyenv
+----
+
+Afterwards, you should see something like the following:
+
+----
+$ tree -L 2 ~/.pyenv
+/<your home directory>/.pyenv
+├── shims
+│   ├── 2to3 <1>
+│   ├── easy_install
+│   ├── idle
+│   ├── pip
+│   ├── pydoc
+│   ├── python
+│   ├── python-config
+│   ├── python3
+│   ├── python3-config
+│   ├── pyvenv
+│   ...
+└── versions
+    ├── 3.4.3
+    ├── 3.5.2
+    ├── 3.5.4
+    └── 3.7.0
+----
+<1> There are versions of each of these files for each python version you have installed.
+
+
+=== Setup your `.bashrc`
+
+
+==== Virtual Environment
+
+[source,shell]
+----
+function activate { <1>
+  source "${HOME}/venv/$1/bin/activate" <2>
+}
+
+export PIP_REQUIRE_VIRTUALENV=true <3>
+export PIP_DOWNLOAD_CACHE=${HOME}/.pip/cache
+syspip2(){
+  PIP_REQUIRE_VIRTUALENV="" /usr/local/bin/pip2 "$@" <4>
+}
+syspip3(){
+  PIP_REQUIRE_VIRTUALENV="" /usr/local/bin/pip3 "$@"
+}
+
+export TEMPUS_PYPI=https://nexus.securetempus.com/repository/pypi-internal/simple
+----
+<1> The `activate` function is about the only thing provided by `virtualenv` that we don't get from `venv`. This function allows you to activate venvs by name, e.g., `$ activate py36`.
+<2> Note the explicit path here. Feel free to change the location as you see fit, e.g., `$(pwd)/my_project_venv/bin/activate`.
+<2> Disallow usage of pip outside of a virtual environment. This will prevent you from accidentally using the system installs. Also, explicitly set the cache location.
+<3> Sometimes you really do need the system python. These two functions will allow you to use the system pip directly. Note the absolute paths.
+
+==== Git Status in Your Prompt
+
+[source,shell]
+----
+source "${BREW_PREFIX}"/git/contrib/completion/git-completion.bash
+source "${BREW_PREFIX}"/git/contrib/completion/git-prompt.sh
+
+export GIT_PS1_SHOWDIRTYSTATE=true
+export GIT_PS1_SHOWUNTRACKEDFILES=true
+----
+There are a couple of ways to install git completion and prompt. The above commands assume you used homebrew.
+When you're in a git repository, you'll now be able to see your branch name and status on your prompt, e.g., `(branch *%)` indicates that you have un-staged changes `*` and new files `%`.
+
+==== Python Aliases
+
+During development, you'll hopefully be writing unit tests and running them often. These aliases will make it easier to run your tests. For these examples, assume the following directory structure:
+
+```
+tests/
+|-- unit/
+|   |-- mypackage/
+|   |   |-- __init__.py
+|   |   |-- test_module1.py
+|   |   '-- test module2.py
+|   '-- __init__.py
+'-- __init__.py
+```
+
+- *Find and run all tests in a given package*
++
+This alias uses the built-in `unittest` as your test runner, and `-v` makes it verbosely print the name and status of each test.
++
+.Alias
+[source,shell]
+----
+alias dtest='python -m unittest discover -v'
+----
++
+.Example
+[source,bash]
+----
+dtest tests <1>
+dtest tests.unit.mypackage <2>
+----
+<1> Find and run all tests found within the `tests/` directory.
+<2> Find and run all tests in `tests/unit/mypackage` directory.
+
+- *Run specific tests*
++
+Often, you don't want to run _all_ the tests, but only a subset. This alias is almost identical to the previous: It verbosely runs tests using the built-in `unittest` package.
++
+.Alias
+[source,bash]
+----
+alias utest='python -m unittest -v'
+----
++
+.Example
+[source,bash]
+----
+utest tests.unit.mypackage.test_module1 <1>
+utest tests.unit.mypackage.test_module1.TestThis <2>
+utest tests.unit.mypackage.test_module1.TestThis.test_this_works <3>
+----
+<1> Run all tests in `test_module1.py`.
+<2> Run all tests in the `TestThis` test case.
+<3> Run a single test.
+
+- *Run tests using `pytest`*
++
+The built-in `unittest` package is simple to use and comprehensive. However, you may want additional statistics or test results in a different format. If so, you'll need to use a different test runner. Most test runners are fully compatible with `unittest`-style tests, which is a great reason to write tests that way.
++
+If you want to use pytest, this alias will allow you almost the same flexibility as `utest` and `dtest`:
++
+.Alias
+[source,shell]
+----
+alias ptest='pytest -vvv -s'
+----
++
+.Example
+[source,bash]
+----
+ptests tests <1>
+ptest tests/unit/mypackage/test_module1.py <2>
+ptest tests/unit/mypackage/test_module1.py::TestThis <3>
+ptest tests/unit/mypackage/test_module1.py::TestThis::test_this_works <4>
+----
+<1> Find and run all tests.
+<2> Run all tests in `test_module1.py`.
+<3> Run all tests in the `TestThis` test case.
+<4> Run a single test.
+
+=== Create global, sandbox environments (optional)
+
+We may want to test out some code or play around with some ideas in jupyter lab; hoowever, we want to avoid polluting our system python, and we probably don't want to pollute our project-specific virtual envs either. For these cases, we can create sandbox venvs.
+
+As discussed above, I prefer to keep my virtual environments in one place, e.g., `${HOME}/venv`, in contrast to within each project. I recommend descriptive names for your venvs; and for my sandbox environments, I use generic names like `py3.7`.
+
+[source,shell]
+----
+~/.pyenv/versions/3.7.1/bin/python3.7 -m venv "${HOME}/venv/py3.7"
+----
+
+Using the alias we defined <<Virtual Environment,above>>, we can easily activate
