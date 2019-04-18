@@ -190,6 +190,18 @@ tree -L 2 ~/.pyenv
 
 === Setup your `.bashrc`
 
+==== Source from your `.bash_profile`
+
+OSX doesn't actually load your `~/.bashrc` by default, which leaves you with two options:
+
+1. Put everything into `~/.bash_profile`.
+2. Source `~/.bashrc` from `.bash_profile`, e.g.,
++
+[source,shell]
+----
+source $HOME/.bashrc
+----
+
 
 ==== Virtual Environment
 
