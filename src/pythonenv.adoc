@@ -141,14 +141,14 @@ After you've decided which versions you want to install, run the following from 
 brew install pyenv
 ----
 +
-2. Install specific python versions via pyenv
+2. Install specific python versions via pyenv (**use whatever versions you need -- this list is not updated**)
 +
 [source,shell]
 ----
 pyenv install 2.7
-pyenv install 3.4.3
-pyenv install 3.5.4
-pyenv install 3.7
+pyenv install 3.8.13
+pyenv install 3.9.13
+pyenv install 3.10
 ----
 +
 3. [optional] Uninstall `pyenv`. Again, this is a personal preference.
